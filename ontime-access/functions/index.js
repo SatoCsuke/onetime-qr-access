@@ -8,7 +8,7 @@ const auth = getAuth();
 const firestore = getFirestore('id-database');
 
 exports.signup = onCall(
-  {cors: ["http://localhost:3000", "https://functions-test-41064.web.app"]}, 
+  { cors: ["http://localhost:3000", "https://causal-plating-383208.web.app", "https://firebasestorage.googleapis.com"] },
   async (request, _response) => {
     const qrCodeId = request.data.qrcodeid;
     const email = request.data.email;
@@ -26,7 +26,7 @@ exports.signup = onCall(
     }
 
     try {
-      
+
       await firestore.runTransaction(async (transuction) => {
         const qrCodeRef = firestore.collection('qrid').doc(qrCodeId);
         const qrCodeDoc = await transuction.get(qrCodeRef);
@@ -35,7 +35,7 @@ exports.signup = onCall(
         if (qrCodeData.isUsed) {
           throw new HttpsError("not-found", "使用済みのQRコードIDです。");
         }
-        
+
         try {
           await auth.createUser({
             email: email,
@@ -45,21 +45,22 @@ exports.signup = onCall(
           })
         } catch (error) {
           console.error(`Code: ${error.code}, Message: ${error.message}`);
-          switch(error.code) {
+          switch (error.code) {
             case "auth/email-already-exists":
               throw new HttpsError("already-exists", error.message);
-              
+
             case "auth/invalid-email":
               throw new HttpsError("invalid-argument", error.message);
-              
+
             case "auth/invalid-password":
               throw new HttpsError("invalid-argument", error.message);
-              
-          default:
-              throw new HttpsError("internal", `認証処理中にエラーが発生しました: ${error.message}`);
-        }}
 
-        await transuction.update(qrCodeRef, {isUsed: true});
+            default:
+              throw new HttpsError("internal", `認証処理中にエラーが発生しました: ${error.message}`);
+          }
+        }
+
+        await transuction.update(qrCodeRef, { isUsed: true });
 
       });
     } catch (error) {
@@ -67,5 +68,5 @@ exports.signup = onCall(
       throw new HttpsError("internal", error.message);
     }
 
-    return { isSuccess: true};
-});
+    return { isSuccess: true };
+  });

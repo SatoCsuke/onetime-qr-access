@@ -41,8 +41,10 @@ Terraformを使用して必要なリソースを構築します。
    ```
    *(※ これにより `variables.tf` 経由で設定値が渡されます)*
 
-3. **【重要】Firebaseプロジェクトの有効化**
-   Terraformを実行する前に、[Firebase コンソール](https://console.firebase.google.com/) にアクセスし、「プロジェクトを追加」から**作成済みのGoogle Cloudプロジェクトを選択してFirebaseを有効化**してください。これを忘れるとTerraformの実行時にエラーになります。
+3. **【重要】FirebaseプロジェクトとStorageの有効化**
+   Terraformを実行する前に、以下の2点を[Firebase コンソール](https://console.firebase.google.com/) から必ず行ってください。これを忘れるとTerraformやデプロイの実行時にエラーになります。
+   - 「プロジェクトを追加」から**作成済みのGoogle Cloudプロジェクトを選択してFirebaseを有効化**する。
+   - 左側メニューの「Storage」を開き、**「Get Started（始める）」をクリックしてStorageバケットを初期化**する。
 
 4. **クォータプロジェクトの設定**
    ローカルでTerraformを実行する場合、APIの課金先プロジェクトを指定する必要があります。ターミナルで以下を実行してください。
@@ -58,7 +60,26 @@ Terraformを使用して必要なリソースを構築します。
    ```
    ※ この処理により Firestore データベースに `qrid` コレクションが作成され、初期データが登録されます。
 
-### 2. Webアプリケーションのセットアップ (Next.js)
+### 2. コンテンツ（PDF）のアップロードとCORS設定
+
+アプリケーション内からは Firebase Storage の特定パスを直接参照しており、またブラウザからの直接ダウンロード（Blob）を許可するためのCORS設定が必要です。アプリを動かす前に以下の手順を完了させてください。
+
+1. **コンテンツのアップロード**
+   [Firebase コンソールのStorage画面](https://console.firebase.google.com/project/_/storage) を開き、以下の階層になるようにPDFを配置します。
+   - `pdfs` フォルダを作成
+   - その中に `authenticated_users` フォルダを作成
+   - フォルダ内に、任意のPDFファイルを **`book.pdf`** という名前でアップロードします（パス： `/pdfs/authenticated_users/book.pdf`）。
+
+2. **CORS（Cross-Origin Resource Sharing）設定の適用**
+   ルートディレクトリにある `cors.json` を使用して、StorageバケットにCORS設定を適用します。これによりアプリケーションからのダウンロードアクセス権が付与されます。
+   ターミナルツールで以下を実行してください（`<your-storage-bucket-name>` はご自身のFirebaseプロジェクトで割り当てられたデフォルトのStorageバケット名（例: `your-project-id.appspot.com` や `your-project-id.firebasestorage.app` など）に置き換えてください）。
+
+   ```bash
+   # Google Cloud CLI (gcloud/gsutil) を使用する場合
+   gsutil cors set cors.json gs://<your-storage-bucket-name>
+   ```
+
+### 3. Webアプリケーションのセットアップ (Next.js)
 
 1. `ontime-access/` ディレクトリに移動します。
    ```bash
@@ -88,10 +109,14 @@ Terraformを使用して必要なリソースを構築します。
 ### 3. デプロイ
 
 アプリケーションは Firebase Hosting（Web Frameworks機能を利用）にデプロイするよう事前構成されています。
+Next.js アプリケーションをデプロイするためには、Firebase CLI の **Web Frameworks の実験的サポート** を有効にする必要があります。
 
 ```bash
 # プロジェクトを選択
 firebase use <your-project-id>
+
+# Web Frameworks サポートを有効化
+firebase experiments:enable webframeworks
 
 # デプロイを実行
 firebase deploy

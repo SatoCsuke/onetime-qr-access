@@ -52,9 +52,24 @@ NEXT_PUBLIC_APP_ID=your_app_id
 NEXT_PUBLIC_MEASUREMENT_ID=your_measurement_id
 ```
 
-*(備考: Cloud Storageへのアクセスが適切に機能するためには、Firebase Storageに `/pdfs/authenticated_users/book.pdf` というファイルが配置されている必要があります)*
+### 3. コンテンツの初期配置（Storage）と CORS設定
 
-### 3. 開発サーバーの起動
+Cloud StorageからのPDFダウンロード機能が適切に動作するために、Firebaseコンソールから手動でファイルを配置し、CORS（Cross-Origin Resource Sharing）設定を行う必要があります。
+
+1. **コンテンツのアップロード**
+   [Firebase コンソール](https://console.firebase.google.com/) から対象プロジェクトの **Storage** を開きます。
+   `pdfs/authenticated_users` という階層のディレクトリを作成し、直下に **`book.pdf`** というファイル名でアップロードします。
+   (パス: `/pdfs/authenticated_users/book.pdf`)
+
+2. **【重要】CORS設定の適用**
+   ブラウザ上でのPDFダウンロードが正しく動作するためには、Storageバケットに対するCORS設定が必要です。ルートディレクトリの `cors.json` を使用して以下のコマンドを実行してください（バケット名を自分の環境に置き換えます）。
+   ```bash
+   cd ..
+   gsutil cors set cors.json gs://<your-storage-bucket-name>
+   cd ontime-access
+   ```
+
+### 4. 開発サーバーの起動
 
 ```bash
 npm run dev
@@ -67,6 +82,8 @@ npm run dev
 このNext.jsアプリはFirebase Hosting (Web Frameworks)を使ってデプロイします。
 詳細はルートディレクトリのデプロイ手順をご参照ください。
 
+事前にWeb Frameworksの実験的サポートを有効にする必要があります。
 ```bash
+firebase experiments:enable webframeworks
 firebase deploy
 ```

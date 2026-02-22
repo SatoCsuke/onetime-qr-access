@@ -33,19 +33,24 @@ Terraformを使用して必要なリソースを構築します。
    ```bash
    cd infra
    ```
-2. `locals.tf` を編集し、ご自身のGCPプロジェクト情報に書き換えます。
+2. `terraform.tfvars` ファイルを作成（または編集）し、ご自身のGCPプロジェクト情報に書き換えます。
    ```hcl
-   locals {
-     project_name   = "your-project-name"
-     project_number = "your-project-number"
-     project_id     = "your-project-id"
-
-     name   = "ontime-image-access"
-     region = "us-central1"
-     id_num = 50 # 生成するQRコードIDの数
-   }
+   project_name   = "your-project-name"
+   project_number = "your-project-number"
+   project_id     = "your-project-id"
    ```
-3. Terraformを初期化し、リソースを構築します。
+   *(※ これにより `variables.tf` 経由で設定値が渡されます)*
+
+3. **【重要】Firebaseプロジェクトの有効化**
+   Terraformを実行する前に、[Firebase コンソール](https://console.firebase.google.com/) にアクセスし、「プロジェクトを追加」から**作成済みのGoogle Cloudプロジェクトを選択してFirebaseを有効化**してください。これを忘れるとTerraformの実行時にエラーになります。
+
+4. **クォータプロジェクトの設定**
+   ローカルでTerraformを実行する場合、APIの課金先プロジェクトを指定する必要があります。ターミナルで以下を実行してください。
+   ```bash
+   gcloud auth application-default set-quota-project <your-project-id>
+   ```
+
+5. Terraformを初期化し、リソースを構築します。
    ```bash
    terraform init
    terraform plan

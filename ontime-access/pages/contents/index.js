@@ -2,12 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { auth } from '../../firebase/firebase';
-import { storage, ref, getDownloadURL, StorageError } from "../../firebase/firebase";
+import { storage, ref, getDownloadURL, getBlob, StorageError } from "../../firebase/firebase";
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 function Contents() {
   const [user, setUser] = useState(null);
-  const [downloadURL, setDownloadURL ] = useState(null);
+  const [downloadURL, setDownloadURL] = useState(null);
   const [downloadError, setDownloadError] = useState('');
   const router = useRouter();
 
@@ -30,8 +30,9 @@ function Contents() {
     try {
       const starsRef = ref(storage, '/pdfs/authenticated_users/book.pdf');
 
-      getDownloadURL(starsRef)
-        .then((url) => {
+      getBlob(starsRef)
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
           setDownloadURL(url);
         })
         .catch((error) => {
@@ -77,10 +78,10 @@ function Contents() {
         <h1 className="block text-gray-700 text-2xl font-bold mb-2">Contents</h1>
         <p className="block text-gray-700 text-base mb-4">Welcome, {user.email}!</p>
         {downloadURL && (
-          <a href={downloadURL} target="_blank" rel="noopener noreferrer" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          <a href={downloadURL} download="book.pdf" target="_blank" rel="noopener noreferrer" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             Download PDF
           </a>
-          
+
         )}
         {downloadError && <p className="text-red-500">{downloadError}</p>}
         <button
